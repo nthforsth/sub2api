@@ -167,6 +167,16 @@ const markdownSlug = computed(() => {
   if (!item) return ''
   if (item.page_slug) return item.page_slug
   if (item.url?.startsWith('md:')) return item.url.slice(3)
+  if (item.url) {
+    try {
+      const url = new URL(item.url, window.location.origin)
+      if (url.origin === window.location.origin && ['/api-docs', '/docs'].includes(url.pathname)) {
+        return 'api-docs'
+      }
+    } catch {
+      if (['/api-docs', '/docs'].includes(item.url)) return 'api-docs'
+    }
+  }
   return ''
 })
 

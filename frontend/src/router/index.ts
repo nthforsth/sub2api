@@ -146,6 +146,7 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/docs',
+    alias: '/api-docs',
     name: 'PublicApiDocs',
     component: () => import('@/views/PublicApiDocsView.vue'),
     meta: {

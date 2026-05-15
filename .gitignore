@@ -84,6 +84,7 @@ temp/
 *.log
 *.bak
 .cache/
+.tools/
 .dev/
 .serena/
 

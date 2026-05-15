@@ -1,9 +1,14 @@
 package handler
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+
+	"github.com/gin-gonic/gin"
 )
 
 func TestCleanPageImageRelativePath(t *testing.T) {
@@ -98,5 +103,76 @@ func TestResolvePageImagePathRejectsSymlinkEscape(t *testing.T) {
 
 	if got, ok := resolvePageImagePath(pagesDir, base, "images/secret.png"); ok {
 		t.Fatalf("expected symlink escape to be rejected, got %q", got)
+	}
+}
+
+func TestResolvePageMarkdownPath(t *testing.T) {
+	h := NewPageHandler(t.TempDir(), nil)
+
+	got, ok := h.resolvePageMarkdownPath("api-docs")
+	if !ok {
+		t.Fatal("expected valid slug to be accepted")
+	}
+	if filepath.Base(got) != "api-docs.md" {
+		t.Fatalf("path = %q, want api-docs.md", got)
+	}
+
+	for _, slug := range []string{"", "../secret", "bad/slug", strings.Repeat("a", 65)} {
+		if got, ok := h.resolvePageMarkdownPath(slug); ok {
+			t.Fatalf("expected slug %q to be rejected, got %q", slug, got)
+		}
+	}
+}
+
+func TestAdminPageContentRoundTrip(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	h := NewPageHandler(t.TempDir(), nil)
+	r := gin.New()
+	r.GET("/admin/pages/:slug", h.GetAdminPageContent)
+	r.PUT("/admin/pages/:slug", h.UpdateAdminPageContent)
+
+	body := `{"content":"# API Docs\n\nHello"}`
+	req := httptest.NewRequest(http.MethodPut, "/admin/pages/api-docs", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("PUT status = %d, body = %s", w.Code, w.Body.String())
+	}
+
+	req = httptest.NewRequest(http.MethodGet, "/admin/pages/api-docs", nil)
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("GET status = %d, body = %s", w.Code, w.Body.String())
+	}
+	if !strings.Contains(w.Body.String(), "# API Docs") {
+		t.Fatalf("GET body missing content: %s", w.Body.String())
+	}
+}
+
+func TestPublicAPIDocs(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	dataDir := t.TempDir()
+	pagesDir := filepath.Join(dataDir, "pages")
+	if err := os.MkdirAll(pagesDir, 0755); err != nil {
+		t.Fatalf("create pages dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(pagesDir, "api-docs.md"), []byte("# Public API Docs"), 0644); err != nil {
+		t.Fatalf("create api docs: %v", err)
+	}
+
+	h := NewPageHandler(dataDir, nil)
+	r := gin.New()
+	r.GET("/public/pages/api-docs", h.GetPublicAPIDocs)
+
+	req := httptest.NewRequest(http.MethodGet, "/public/pages/api-docs", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("GET status = %d, body = %s", w.Code, w.Body.String())
+	}
+	if !strings.Contains(w.Body.String(), "# Public API Docs") {
+		t.Fatalf("GET body missing content: %s", w.Body.String())
 	}
 }

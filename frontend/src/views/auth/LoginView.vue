@@ -1,12 +1,20 @@
 <template>
+  <router-link
+    to="/home"
+    class="fixed left-5 top-5 z-50 inline-flex items-center gap-1.5 text-sm font-medium text-neutral-500 transition-colors hover:text-neutral-950 dark:text-cyan-100/70 dark:hover:text-cyan-100"
+  >
+    <Icon name="arrowLeft" size="sm" />
+    {{ t('auth.backToHome') }}
+  </router-link>
+
   <AuthLayout>
     <div class="space-y-6">
       <!-- Title -->
       <div class="text-center">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+        <h2 class="text-2xl font-bold text-neutral-950 dark:text-white">
           {{ t('auth.welcomeBack') }}
         </h2>
-        <p class="mt-2 text-sm text-gray-500 dark:text-dark-400">
+        <p class="mt-2 text-sm text-neutral-600 dark:text-slate-300">
           {{ t('auth.signInToAccount') }}
         </p>
       </div>
@@ -93,7 +101,7 @@
         <button
           type="submit"
           :disabled="authActionDisabled || (turnstileEnabled && !turnstileToken)"
-          class="btn btn-primary w-full"
+          class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-950 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-neutral-950/10 transition hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-neutral-400/40 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-slate-950 dark:hover:bg-cyan-100"
         >
           <svg
             v-if="isLoading"

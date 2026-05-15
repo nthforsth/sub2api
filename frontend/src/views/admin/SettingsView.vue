@@ -4277,6 +4277,131 @@
             </div>
           </div>
 
+          <!-- API Documentation -->
+          <div class="card">
+            <div
+              class="border-b border-gray-100 px-6 py-4 dark:border-dark-700"
+            >
+              <div
+                class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
+              >
+                <div>
+                  <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    {{ localText("API 文档", "API Documentation") }}
+                  </h2>
+                  <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    {{
+                      localText(
+                        "编辑用户侧 API 接入说明，保存后会自动同步侧边栏入口。",
+                        "Edit user-facing API integration docs. Saving automatically syncs the sidebar entry.",
+                      )
+                    }}
+                  </p>
+                </div>
+                <a
+                  :href="apiDocsPreviewPath"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="btn btn-secondary btn-sm inline-flex items-center gap-1.5"
+                >
+                  <Icon name="externalLink" size="sm" />
+                  {{ localText("预览", "Preview") }}
+                </a>
+              </div>
+            </div>
+            <div class="space-y-5 p-6">
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <div>
+                  <label
+                    class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    {{ localText("菜单名称", "Menu label") }}
+                  </label>
+                  <input
+                    v-model="apiDocsForm.label"
+                    type="text"
+                    class="input"
+                    :placeholder="localText('API 文档', 'API Docs')"
+                  />
+                </div>
+                <div>
+                  <label
+                    class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Slug
+                  </label>
+                  <input
+                    v-model="apiDocsForm.slug"
+                    type="text"
+                    class="input font-mono text-sm"
+                    placeholder="api-docs"
+                  />
+                </div>
+                <div>
+                  <label
+                    class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    {{ localText("可见范围", "Visibility") }}
+                  </label>
+                  <select v-model="apiDocsForm.visibility" class="input">
+                    <option value="user">
+                      {{ localText("登录用户可见", "Visible to users") }}
+                    </option>
+                    <option value="admin">
+                      {{ localText("仅管理员可见", "Admins only") }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+
+              <div
+                class="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 dark:border-dark-700 dark:bg-dark-800/60"
+              >
+                <div>
+                  <p class="text-sm font-medium text-gray-900 dark:text-white">
+                    {{ localText("显示在侧边栏菜单", "Show in sidebar menu") }}
+                  </p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">
+                    {{
+                      localText(
+                        "关闭后内容仍会保存，但用户不会在菜单里看到入口。",
+                        "When disabled, content is still saved but hidden from the menu.",
+                      )
+                    }}
+                  </p>
+                </div>
+                <Toggle v-model="apiDocsForm.enabled" />
+              </div>
+
+              <div>
+                <label
+                  class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Markdown
+                </label>
+                <textarea
+                  v-model="apiDocsForm.content"
+                  rows="16"
+                  class="input min-h-[360px] font-mono text-sm leading-6"
+                  spellcheck="false"
+                ></textarea>
+                <div
+                  class="mt-2 flex flex-col gap-2 text-xs text-gray-500 dark:text-gray-400 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <span>
+                    {{
+                      localText(
+                        "支持标题、代码块、表格和相对图片。图片可放在 data/pages/{slug}/ 下。",
+                        "Supports headings, code blocks, tables, and relative images under data/pages/{slug}/.",
+                      )
+                    }}
+                  </span>
+                  <span>{{ apiDocsForm.content.length }} / {{ apiDocsMaxLength }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Custom Menu Items -->
           <div class="card">
             <div
@@ -6281,6 +6406,134 @@ const testEmailAddress = ref("");
 const registrationEmailSuffixWhitelistTags = ref<string[]>([]);
 const registrationEmailSuffixWhitelistDraft = ref("");
 const tablePageSizeOptionsInput = ref("10, 20, 50, 100");
+const apiDocsMenuItemId = "api-docs";
+const apiDocsDefaultSlug = "api-docs";
+const apiDocsMaxLength = 1024 * 1024;
+const apiDocsSlugPattern = /^[a-zA-Z0-9][a-zA-Z0-9_-]*$/;
+const apiDocsDefaultIconSvg =
+  '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75A7.5 7.5 0 0 0 6 4.2c-1.05 0-2.07.2-3 .57v13.5c.93-.37 1.95-.57 3-.57a7.5 7.5 0 0 1 6 2.55m0-13.5a7.5 7.5 0 0 1 6-2.55c1.05 0 2.07.2 3 .57v13.5a8.18 8.18 0 0 0-3-.57 7.5 7.5 0 0 0-6 2.55m0-13.5v13.5"/></svg>';
+
+const defaultApiDocsContent = `# AitdAPI 接入文档
+
+本文档说明如何在 Codex、Claude Code 和 OpenClaw 中接入 AitdAPI。请先在系统中创建 API 密钥，然后将下面示例里的地址和密钥替换为你自己的信息。
+
+## 基础信息
+
+本地开发地址：
+
+~~~text
+http://localhost:3003
+~~~
+
+生产环境地址：
+
+~~~text
+https://your-domain.com
+~~~
+
+API 密钥格式：
+
+~~~text
+sk-xxxxxxxxxxxxxxxx
+~~~
+
+## Codex 配置
+
+Codex 使用 OpenAI 兼容配置。
+
+macOS / Linux：
+
+~~~bash
+export OPENAI_API_KEY="sk-xxxxxxxxxxxxxxxx"
+export OPENAI_BASE_URL="http://localhost:3003/v1"
+~~~
+
+Windows PowerShell：
+
+~~~powershell
+$env:OPENAI_API_KEY="sk-xxxxxxxxxxxxxxxx"
+$env:OPENAI_BASE_URL="http://localhost:3003/v1"
+~~~
+
+## Claude Code 配置
+
+Claude Code 使用 Anthropic 兼容配置。
+
+推荐使用 cc switch 接入 AitdAPI：
+
+1. 在 AitdAPI 管理后台进入 设置 -> 路由。
+2. 开启总路由。
+3. 在路由列表中启用 Claude。
+4. 启用对应配置时，同时打开设置按钮旁边的路由开关。
+5. 在 Claude Code 中使用 cc switch 选择对应配置。
+
+完成后，Claude Code 的请求会按当前启用的路由配置进入 AitdAPI。若 cc switch 已经写入本地 Claude Code 配置，通常不需要再手动设置 ANTHROPIC_BASE_URL。
+
+macOS / Linux：
+
+~~~bash
+export ANTHROPIC_BASE_URL="http://localhost:3003"
+export ANTHROPIC_AUTH_TOKEN="sk-xxxxxxxxxxxxxxxx"
+export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+~~~
+
+Windows PowerShell：
+
+~~~powershell
+$env:ANTHROPIC_BASE_URL="http://localhost:3003"
+$env:ANTHROPIC_AUTH_TOKEN="sk-xxxxxxxxxxxxxxxx"
+$env:CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC="1"
+~~~
+
+VSCode Claude Code 可写入 ~/.claude/settings.json：
+
+~~~json
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "http://localhost:3003",
+    "ANTHROPIC_AUTH_TOKEN": "sk-xxxxxxxxxxxxxxxx",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
+  }
+}
+~~~
+
+## OpenClaw 配置
+
+OpenClaw 推荐使用 OpenAI 兼容模式接入。
+
+~~~bash
+export OPENAI_API_KEY="sk-xxxxxxxxxxxxxxxx"
+export OPENAI_BASE_URL="http://localhost:3003/v1"
+~~~
+
+配置文件示例：
+
+~~~json
+{
+  "provider": "openai",
+  "apiKey": "sk-xxxxxxxxxxxxxxxx",
+  "baseURL": "http://localhost:3003/v1",
+  "model": "gpt-5.5"
+}
+~~~
+
+## 常见问题
+
+- 401：API 密钥无效、已删除、已过期，或请求头没有携带 Authorization。
+- 404：OpenAI 兼容客户端通常需要 /v1；Claude Code 通常不需要 /v1。
+- 429：当前密钥、用户分组或上游账号达到限流。
+- 5xx：通常是上游账号、渠道或网络暂时不可用。
+`;
+
+const apiDocsForm = reactive({
+  enabled: true,
+  label: "API Docs",
+  slug: apiDocsDefaultSlug,
+  visibility: "user" as "user" | "admin",
+  content: defaultApiDocsContent,
+});
+
+const apiDocsPreviewPath = computed(() => `/custom/${apiDocsMenuItemId}`);
 
 // Admin API Key 状态
 const adminApiKeyLoading = ref(true);
@@ -6490,6 +6743,7 @@ const form = reactive<SettingsForm>({
     label: string;
     icon_svg: string;
     url: string;
+    page_slug?: string;
     visibility: "user" | "admin";
     sort_order: number;
   }>,
@@ -7106,6 +7360,67 @@ function removeMenuItem(index: number) {
   });
 }
 
+function syncApiDocsFormFromMenuItems() {
+  const item = form.custom_menu_items.find(
+    (entry) => entry.id === apiDocsMenuItemId,
+  );
+  if (!item) {
+    apiDocsForm.enabled = false;
+    apiDocsForm.label = localText("API 文档", "API Docs");
+    apiDocsForm.slug = apiDocsDefaultSlug;
+    apiDocsForm.visibility = "user";
+    return;
+  }
+
+  apiDocsForm.enabled = true;
+  apiDocsForm.label = item.label || localText("API 文档", "API Docs");
+  apiDocsForm.visibility = item.visibility === "admin" ? "admin" : "user";
+  apiDocsForm.slug =
+    item.page_slug ||
+    (item.url?.startsWith("md:") ? item.url.slice(3) : apiDocsDefaultSlug);
+}
+
+function applyApiDocsMenuItem() {
+  const index = form.custom_menu_items.findIndex(
+    (entry) => entry.id === apiDocsMenuItemId,
+  );
+  if (!apiDocsForm.enabled) {
+    if (index >= 0) {
+      form.custom_menu_items.splice(index, 1);
+      form.custom_menu_items.forEach((item, i) => {
+        item.sort_order = i;
+      });
+    }
+    return;
+  }
+
+  const slug = apiDocsForm.slug.trim();
+  const item = {
+    id: apiDocsMenuItemId,
+    label: apiDocsForm.label.trim() || localText("API 文档", "API Docs"),
+    icon_svg: form.custom_menu_items[index]?.icon_svg || apiDocsDefaultIconSvg,
+    url: `md:${slug}`,
+    page_slug: slug,
+    visibility: apiDocsForm.visibility,
+    sort_order:
+      index >= 0
+        ? form.custom_menu_items[index].sort_order
+        : form.custom_menu_items.length,
+  };
+
+  if (index >= 0) {
+    form.custom_menu_items[index] = {
+      ...form.custom_menu_items[index],
+      ...item,
+    };
+  } else {
+    form.custom_menu_items.push(item);
+  }
+  form.custom_menu_items.forEach((entry, i) => {
+    entry.sort_order = i;
+  });
+}
+
 function moveMenuItem(index: number, direction: -1 | 1) {
   const targetIndex = index + direction;
   if (targetIndex < 0 || targetIndex >= form.custom_menu_items.length) return;
@@ -7222,6 +7537,15 @@ async function loadSettings() {
             content_md: doc.content_md || "",
           }))
         : defaultLoginAgreementDocuments();
+    syncApiDocsFormFromMenuItems();
+    try {
+      const page = await adminAPI.settings.getAdminPageContent(
+        apiDocsForm.slug,
+      );
+      apiDocsForm.content = page.content || defaultApiDocsContent;
+    } catch (_error: unknown) {
+      apiDocsForm.content = defaultApiDocsContent;
+    }
     Object.assign(authSourceDefaults, buildAuthSourceDefaultsState(settings));
     form.backend_mode_enabled = settings.backend_mode_enabled;
     form.default_subscriptions = normalizeDefaultSubscriptionSettings(
@@ -7470,6 +7794,32 @@ async function saveSettings() {
     form.login_agreement_mode =
       form.login_agreement_mode === "checkbox" ? "checkbox" : "modal";
     form.login_agreement_documents = normalizedLoginAgreementDocuments;
+
+    apiDocsForm.slug = apiDocsForm.slug.trim() || apiDocsDefaultSlug;
+    apiDocsForm.label =
+      apiDocsForm.label.trim() || localText("API 文档", "API Docs");
+    if (
+      !apiDocsSlugPattern.test(apiDocsForm.slug) ||
+      apiDocsForm.slug.length > 64
+    ) {
+      appStore.showError(
+        localText(
+          "API 文档 Slug 只能包含字母、数字、下划线和中划线，且必须以字母或数字开头。",
+          "API docs slug can only contain letters, numbers, underscores, and hyphens, and must start with a letter or number.",
+        ),
+      );
+      return;
+    }
+    if (new Blob([apiDocsForm.content]).size > apiDocsMaxLength) {
+      appStore.showError(
+        localText(
+          "API 文档内容不能超过 1MB。",
+          "API docs content cannot exceed 1MB.",
+        ),
+      );
+      return;
+    }
+    applyApiDocsMenuItem();
 
     const normalizedDefaultSubscriptions = normalizeDefaultSubscriptionSettings(
       form.default_subscriptions,
@@ -7753,6 +8103,10 @@ async function saveSettings() {
 
     appendAuthSourceDefaultsToUpdateRequest(payload, authSourceDefaults);
 
+    await adminAPI.settings.updateAdminPageContent(
+      apiDocsForm.slug,
+      apiDocsForm.content,
+    );
     const updated = await adminAPI.settings.updateSettings(payload);
     for (const [key, value] of Object.entries(updated)) {
       if (key === "openai_fast_policy_settings") continue;

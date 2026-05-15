@@ -1105,6 +1105,31 @@ export async function resetWebSearchUsage(payload: {
   );
 }
 
+export interface AdminPageContent {
+  slug: string;
+  content: string;
+}
+
+export async function getAdminPageContent(
+  slug: string,
+): Promise<AdminPageContent> {
+  const { data } = await apiClient.get<AdminPageContent>(
+    `/admin/pages/${encodeURIComponent(slug)}`,
+  );
+  return data;
+}
+
+export async function updateAdminPageContent(
+  slug: string,
+  content: string,
+): Promise<AdminPageContent> {
+  const { data } = await apiClient.put<AdminPageContent>(
+    `/admin/pages/${encodeURIComponent(slug)}`,
+    { content },
+  );
+  return data;
+}
+
 export const settingsAPI = {
   getSettings,
   updateSettings,
@@ -1127,6 +1152,8 @@ export const settingsAPI = {
   updateWebSearchEmulationConfig,
   testWebSearchEmulation,
   resetWebSearchUsage,
+  getAdminPageContent,
+  updateAdminPageContent,
 };
 
 export default settingsAPI;

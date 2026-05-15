@@ -18,11 +18,18 @@ import (
 var validSlugPattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_-]*$`)
 
 const maxPageFileSize = 1 << 20 // 1MB
+const maxAdminPageContentSize = maxPageFileSize
 
 type PageHandler struct {
 	pagesDir       string
 	settingService *service.SettingService
 }
+
+type updatePageContentRequest struct {
+	Content string `json:"content"`
+}
+
+const publicAPIDocsSlug = "api-docs"
 
 func NewPageHandler(dataDir string, settingService *service.SettingService) *PageHandler {
 	pagesDir := filepath.Join(dataDir, "pages")
@@ -72,6 +79,34 @@ func (h *PageHandler) GetPageContent(c *gin.Context) {
 	c.Data(http.StatusOK, "text/markdown; charset=utf-8", content)
 }
 
+// GetPublicAPIDocs serves the public API documentation markdown.
+// GET /api/v1/public/pages/api-docs
+func (h *PageHandler) GetPublicAPIDocs(c *gin.Context) {
+	cleaned, ok := h.resolvePageMarkdownPath(publicAPIDocsSlug)
+	if !ok {
+		response.BadRequest(c, "Invalid page slug")
+		return
+	}
+
+	info, err := os.Stat(cleaned)
+	if err != nil || info.IsDir() {
+		c.JSON(http.StatusNotFound, gin.H{"error": "page not found"})
+		return
+	}
+	if info.Size() > maxPageFileSize {
+		c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "page too large"})
+		return
+	}
+
+	content, err := os.ReadFile(cleaned)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to read page"})
+		return
+	}
+
+	c.Data(http.StatusOK, "text/markdown; charset=utf-8", content)
+}
+
 // ListPages returns available page slugs.
 // GET /api/v1/pages
 func (h *PageHandler) ListPages(c *gin.Context) {
@@ -92,6 +127,79 @@ func (h *PageHandler) ListPages(c *gin.Context) {
 		}
 	}
 	response.Success(c, slugs)
+}
+
+// GetAdminPageContent serves raw markdown content for admins.
+// GET /api/v1/admin/pages/:slug
+func (h *PageHandler) GetAdminPageContent(c *gin.Context) {
+	slug := c.Param("slug")
+	cleaned, ok := h.resolvePageMarkdownPath(slug)
+	if !ok {
+		response.BadRequest(c, "Invalid page slug")
+		return
+	}
+
+	info, err := os.Stat(cleaned)
+	if err != nil || info.IsDir() {
+		response.Success(c, gin.H{"slug": slug, "content": ""})
+		return
+	}
+	if info.Size() > maxPageFileSize {
+		c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "page too large"})
+		return
+	}
+
+	content, err := os.ReadFile(cleaned)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to read page"})
+		return
+	}
+
+	response.Success(c, gin.H{"slug": slug, "content": string(content)})
+}
+
+// UpdateAdminPageContent saves markdown content for admins.
+// PUT /api/v1/admin/pages/:slug
+func (h *PageHandler) UpdateAdminPageContent(c *gin.Context) {
+	slug := c.Param("slug")
+	cleaned, ok := h.resolvePageMarkdownPath(slug)
+	if !ok {
+		response.BadRequest(c, "Invalid page slug")
+		return
+	}
+
+	var req updatePageContentRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request body")
+		return
+	}
+	if len([]byte(req.Content)) > maxAdminPageContentSize {
+		c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "page too large"})
+		return
+	}
+
+	if err := os.MkdirAll(h.pagesDir, 0755); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to prepare pages directory"})
+		return
+	}
+	if err := os.WriteFile(cleaned, []byte(req.Content), 0644); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save page"})
+		return
+	}
+
+	response.Success(c, gin.H{"slug": slug, "content": req.Content})
+}
+
+func (h *PageHandler) resolvePageMarkdownPath(slug string) (string, bool) {
+	if !validSlugPattern.MatchString(slug) || len(slug) > 64 {
+		return "", false
+	}
+	filePath := filepath.Join(h.pagesDir, slug+".md")
+	cleaned := filepath.Clean(filePath)
+	if !isPathWithinOrEqualBase(cleaned, filepath.Clean(h.pagesDir)) {
+		return "", false
+	}
+	return cleaned, true
 }
 
 // ServePageImage serves images from data/pages/{slug}/ directory.
@@ -201,6 +309,14 @@ func isPathWithinBase(path, base string) bool {
 	return rel != "." && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
 }
 
+func isPathWithinOrEqualBase(path, base string) bool {
+	rel, err := filepath.Rel(filepath.Clean(base), filepath.Clean(path))
+	if err != nil {
+		return false
+	}
+	return rel == "." || (rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)))
+}
+
 // findSlugVisibility looks up the slug in custom_menu_items and returns (visibility, found).
 func (h *PageHandler) findSlugVisibility(c *gin.Context, slug string) (string, bool) {
 	if h.settingService == nil {
@@ -274,10 +390,22 @@ func RegisterPageRoutes(v1 *gin.RouterGroup, dataDir string, jwtAuth gin.Handler
 		pageImages.GET("/:slug/images/*filename", h.ServePageImage)
 	}
 
+	publicPages := v1.Group("/public/pages")
+	{
+		publicPages.GET("/api-docs", h.GetPublicAPIDocs)
+	}
+
 	// Admin-only: list all available pages
 	adminPages := v1.Group("/pages")
 	adminPages.Use(adminAuth)
 	{
 		adminPages.GET("", h.ListPages)
+	}
+
+	adminMarkdownPages := v1.Group("/admin/pages")
+	adminMarkdownPages.Use(adminAuth)
+	{
+		adminMarkdownPages.GET("/:slug", h.GetAdminPageContent)
+		adminMarkdownPages.PUT("/:slug", h.UpdateAdminPageContent)
 	}
 }

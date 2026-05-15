@@ -465,6 +465,15 @@ onUnmounted(() => {
   line-height: 1.7;
   color: inherit;
 }
+.dark .markdown-page-content {
+  color: #ffffff !important;
+}
+.dark .markdown-page-content p,
+.dark .markdown-page-content li,
+.dark .markdown-page-content th,
+.dark .markdown-page-content td {
+  color: #ffffff !important;
+}
 .markdown-page-content h1 { @apply text-3xl font-bold mt-8 mb-4 pb-2 border-b border-gray-200 dark:border-dark-600; }
 .markdown-page-content h2 { @apply text-2xl font-bold mt-6 mb-3; }
 .markdown-page-content h3 { @apply text-xl font-semibold mt-5 mb-2; }
@@ -475,6 +484,9 @@ onUnmounted(() => {
 .markdown-page-content li { @apply mb-1; }
 .markdown-page-content a { @apply text-primary-500 hover:text-primary-600 underline; }
 .markdown-page-content blockquote { @apply border-l-4 border-gray-300 dark:border-dark-500 pl-4 italic text-gray-600 dark:text-dark-300 my-4; }
+.dark .markdown-page-content blockquote {
+  color: #ffffff !important;
+}
 .markdown-page-content img { @apply max-w-full h-auto rounded-lg my-4; }
 .markdown-page-content table { @apply w-full border-collapse my-4; }
 .markdown-page-content th { @apply border border-gray-300 dark:border-dark-500 px-3 py-2 bg-gray-50 dark:bg-dark-700 font-semibold text-left; }

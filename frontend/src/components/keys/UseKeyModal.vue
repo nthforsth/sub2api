@@ -275,23 +275,27 @@ const clientTabs = computed((): TabConfig[] => {
         tabs.push({ id: 'claude', label: t('keys.useKeyModal.cliTabs.claudeCode'), icon: TerminalIcon })
       }
       tabs.push({ id: 'opencode', label: t('keys.useKeyModal.cliTabs.opencode'), icon: TerminalIcon })
+      tabs.push({ id: 'openclaw', label: t('keys.useKeyModal.cliTabs.openclaw'), icon: TerminalIcon })
       return tabs
     }
     case 'gemini':
       return [
         { id: 'gemini', label: t('keys.useKeyModal.cliTabs.geminiCli'), icon: SparkleIcon },
-        { id: 'opencode', label: t('keys.useKeyModal.cliTabs.opencode'), icon: TerminalIcon }
+        { id: 'opencode', label: t('keys.useKeyModal.cliTabs.opencode'), icon: TerminalIcon },
+        { id: 'openclaw', label: t('keys.useKeyModal.cliTabs.openclaw'), icon: TerminalIcon }
       ]
     case 'antigravity':
       return [
         { id: 'claude', label: t('keys.useKeyModal.cliTabs.claudeCode'), icon: TerminalIcon },
         { id: 'gemini', label: t('keys.useKeyModal.cliTabs.geminiCli'), icon: SparkleIcon },
-        { id: 'opencode', label: t('keys.useKeyModal.cliTabs.opencode'), icon: TerminalIcon }
+        { id: 'opencode', label: t('keys.useKeyModal.cliTabs.opencode'), icon: TerminalIcon },
+        { id: 'openclaw', label: t('keys.useKeyModal.cliTabs.openclaw'), icon: TerminalIcon }
       ]
     default:
       return [
         { id: 'claude', label: t('keys.useKeyModal.cliTabs.claudeCode'), icon: TerminalIcon },
-        { id: 'opencode', label: t('keys.useKeyModal.cliTabs.opencode'), icon: TerminalIcon }
+        { id: 'opencode', label: t('keys.useKeyModal.cliTabs.opencode'), icon: TerminalIcon },
+        { id: 'openclaw', label: t('keys.useKeyModal.cliTabs.openclaw'), icon: TerminalIcon }
       ]
   }
 })
@@ -309,7 +313,7 @@ const openaiTabs: TabConfig[] = [
   { id: 'windows', label: 'Windows', icon: WindowsIcon }
 ]
 
-const showShellTabs = computed(() => activeClientTab.value !== 'opencode')
+const showShellTabs = computed(() => !['opencode', 'openclaw'].includes(activeClientTab.value))
 
 const currentTabs = computed(() => {
   if (!showShellTabs.value) return []
@@ -355,7 +359,7 @@ const platformNote = computed(() => {
   }
 })
 
-const showPlatformNote = computed(() => activeClientTab.value !== 'opencode')
+const showPlatformNote = computed(() => !['opencode', 'openclaw'].includes(activeClientTab.value))
 
 const escapeHtml = (value: string) => value
   .replace(/&/g, '&amp;')
@@ -410,6 +414,10 @@ const currentFiles = computed((): FileConfig[] => {
       default:
         return [generateOpenCodeConfig('openai', apiBase, apiKey)]
     }
+  }
+
+  if (activeClientTab.value === 'openclaw') {
+    return generateOpenClawConfig(baseRoot, apiKey)
   }
 
   switch (props.platform) {
@@ -603,6 +611,79 @@ responses_websockets_v2 = true`
     {
       path: `${configDir}/auth.json`,
       content: authContent
+    }
+  ]
+}
+
+function generateOpenClawConfig(baseUrl: string, apiKey: string): FileConfig[] {
+  const providerContent = JSON.stringify(
+    {
+      models: {
+        providers: {
+          sub2api: {
+            baseUrl,
+            apiKey,
+            api: 'openai-responses',
+            authHeader: true,
+            headers: {
+              'User-Agent': 'openclaw',
+              originator: 'openclaw'
+            },
+            models: [
+              {
+                id: 'gpt-5.5',
+                name: 'gpt-5.5',
+                input: ['text'],
+                reasoning: false,
+                contextWindow: 200000,
+                maxTokens: 8192,
+                api: 'openai-responses'
+              },
+              {
+                id: 'gpt-image-1.5',
+                name: 'gpt-image-1.5',
+                input: ['text', 'image'],
+                reasoning: false,
+                contextWindow: 32000,
+                maxTokens: 8192,
+                api: 'openai-responses'
+              }
+            ]
+          }
+        }
+      }
+    },
+    null,
+    2
+  )
+
+  const defaultsContent = JSON.stringify(
+    {
+      model: {
+        primary: 'sub2api/gpt-5.5'
+      },
+      imageModel: {
+        primary: 'sub2api/gpt-image-1.5'
+      },
+      models: {
+        'sub2api/gpt-5.5': {},
+        'sub2api/gpt-image-1.5': {}
+      }
+    },
+    null,
+    2
+  )
+
+  return [
+    {
+      path: '~/.openclaw/openclaw.json',
+      content: providerContent,
+      hint: t('keys.useKeyModal.openclaw.providerHint')
+    },
+    {
+      path: '~/.openclaw/agents/main/agent/models.json',
+      content: defaultsContent,
+      hint: t('keys.useKeyModal.openclaw.defaultsHint')
     }
   ]
 }

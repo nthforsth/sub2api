@@ -11,6 +11,33 @@ export default {
     getStarted: '立即开始',
     goToDashboard: '进入控制台',
     // 新增：面向用户的价值主张
+    aitdHero: {
+      description: '\u4e3a\u4e1a\u52a1\u548c\u56e2\u961f\u63d0\u4f9b\u7a33\u5b9a\u3001\u5feb\u901f\u7684 AI API \u7f51\u5173\uff1a\u7edf\u4e00\u5bc6\u94a5\u3001\u667a\u80fd\u8def\u7531\u3001\u7528\u91cf\u53ef\u89c6\uff0c\u63a5\u5165\u66f4\u7701\u5fc3\u3002',
+      route: '\u8def\u7531',
+      openaiPool: 'OpenAI \u8d26\u53f7\u6c60',
+      status: '\u72b6\u6001',
+      realtimeUsage: '\u5b9e\u65f6\u7528\u91cf',
+      live: '\u5b9e\u65f6',
+      metrics: {
+        unifiedAccess: '\u7edf\u4e00\u63a5\u5165',
+        modelRouting: '\u6a21\u578b\u8def\u7531',
+        usageControl: '\u7528\u91cf\u63a7\u5236'
+      },
+      features: {
+        unifiedGateway: {
+          title: '\u7edf\u4e00\u7f51\u5173',
+          description: '\u5bf9\u5916\u63d0\u4f9b OpenAI \u517c\u5bb9\u63a5\u53e3\uff0c\u5185\u90e8\u81ea\u52a8\u8def\u7531\u5230\u5408\u9002\u7684\u4e0a\u6e38\u6e20\u9053\u3002'
+        },
+        smartDispatch: {
+          title: '\u667a\u80fd\u8c03\u5ea6',
+          description: '\u7edf\u4e00\u7ba1\u7406\u8d26\u53f7\u3001\u5206\u7ec4\u3001\u6a21\u578b\u3001\u914d\u989d\u548c\u7c98\u6027\u4f1a\u8bdd\uff0c\u8ba9\u670d\u52a1\u66f4\u7a33\u5b9a\u3002'
+        },
+        clearOperations: {
+          title: '\u8fd0\u8425\u6e05\u6670',
+          description: '\u7528\u91cf\u3001\u6210\u672c\u3001\u9519\u8bef\u548c\u53ef\u7528\u6027\u90fd\u80fd\u5728\u63a7\u5236\u53f0\u4e2d\u5feb\u901f\u67e5\u770b\u3002'
+        }
+      }
+    },
     heroSubtitle: '一个密钥，畅用多个 AI 模型',
     heroDescription: '无需管理多个订阅账号，一站式接入 Claude、GPT、Gemini 等主流 AI 服务',
     tags: {
@@ -397,6 +424,7 @@ export default {
     processing: '处理中...',
     continue: '继续',
     rememberMe: '记住我',
+    backToHome: '返回首页',
     dontHaveAccount: '还没有账户？',
     alreadyHaveAccount: '已有账户？',
     registrationDisabled: '注册功能暂时关闭，请联系管理员。',
@@ -704,7 +732,8 @@ export default {
         geminiCli: 'Gemini CLI',
         codexCli: 'Codex CLI',
         codexCliWs: 'Codex CLI (WebSocket)',
-        opencode: 'OpenCode'
+        opencode: 'OpenCode',
+        openclaw: 'OpenClaw'
       },
       antigravity: {
         description: '为 Antigravity 分组配置 API 访问。请根据您使用的客户端选择对应的配置方式。',
@@ -725,6 +754,10 @@ export default {
         title: 'OpenCode 配置示例',
         subtitle: 'opencode.json',
         hint: '配置文件路径：~/.config/opencode/opencode.json（或 opencode.jsonc），不存在需手动创建。可使用默认 provider（openai/anthropic/google）或自定义 provider_id。API Key 支持直接配置或通过客户端 /connect 命令配置。示例仅供参考，模型与选项可按需调整。'
+      },
+      openclaw: {
+        providerHint: '将这段 provider 配置合并到 OpenClaw 的 provider 配置文件中。',
+        defaultsHint: '将这些默认模型配置到 OpenClaw main agent，然后重启 OpenClaw Gateway。'
       }
     },
     customKeyLabel: '自定义密钥',
@@ -5249,6 +5282,7 @@ export default {
       description: '管理注册、邮箱验证、默认值和 SMTP 设置',
       tabs: {
         general: '通用设置',
+        apiDocs: 'API 文档',
         agreement: '登录条款',
         features: '功能开关',
         security: '安全与认证',

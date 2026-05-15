@@ -11,6 +11,33 @@ export default {
     getStarted: 'Get Started',
     goToDashboard: 'Go to Dashboard',
     // User-focused value proposition
+    aitdHero: {
+      description: 'A clean, fast API gateway for teams that need stable model access, unified keys, smart routing, and visible usage control.',
+      route: 'Route',
+      openaiPool: 'OpenAI Pool',
+      status: 'Status',
+      realtimeUsage: 'Realtime usage',
+      live: 'live',
+      metrics: {
+        unifiedAccess: 'Unified access',
+        modelRouting: 'Model routing',
+        usageControl: 'Usage control'
+      },
+      features: {
+        unifiedGateway: {
+          title: 'Unified gateway',
+          description: 'Expose OpenAI-compatible endpoints while routing requests to the right upstream channel.'
+        },
+        smartDispatch: {
+          title: 'Smart dispatch',
+          description: 'Balance accounts, groups, models, quotas, and sticky sessions from one control plane.'
+        },
+        clearOperations: {
+          title: 'Clear operations',
+          description: 'Track usage, cost, errors, and availability with a dashboard built for daily operations.'
+        }
+      }
+    },
     heroSubtitle: 'One Key, All AI Models',
     heroDescription: 'No need to manage multiple subscriptions. Access Claude, GPT, Gemini and more with a single API key',
     tags: {
@@ -397,6 +424,7 @@ export default {
     processing: 'Processing...',
     continue: 'Continue',
     rememberMe: 'Remember me',
+    backToHome: 'Back to home',
     dontHaveAccount: "Don't have an account?",
     alreadyHaveAccount: 'Already have an account?',
     registrationDisabled: 'Registration is currently disabled. Please contact the administrator.',
@@ -705,6 +733,7 @@ export default {
         codexCli: 'Codex CLI',
         codexCliWs: 'Codex CLI (WebSocket)',
         opencode: 'OpenCode',
+        openclaw: 'OpenClaw',
       },
       antigravity: {
         description: 'Configure API access for Antigravity group. Select the configuration method based on your client.',
@@ -722,6 +751,10 @@ export default {
         title: 'OpenCode Example',
         subtitle: 'opencode.json',
         hint: 'Config path: ~/.config/opencode/opencode.json (or opencode.jsonc), create if not exists. Use default providers (openai/anthropic/google) or custom provider_id. API Key can be configured directly or via /connect command. This is an example, adjust models and options as needed.',
+      },
+      openclaw: {
+        providerHint: 'Merge this provider block into your OpenClaw provider configuration.',
+        defaultsHint: 'Set these defaults for the main OpenClaw agent, then restart the OpenClaw gateway.',
       },
     },
     customKeyLabel: 'Custom Key',
@@ -5086,6 +5119,7 @@ export default {
       description: 'Manage registration, email verification, default values, and SMTP settings',
       tabs: {
         general: 'General',
+        apiDocs: 'API Docs',
         agreement: 'Agreement',
         features: 'Feature Switches',
         security: 'Security',

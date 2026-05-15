@@ -24,6 +24,11 @@ var semverPattern = regexp.MustCompile(`^\d+\.\d+\.\d+$`)
 
 // menuItemIDPattern validates custom menu item IDs: alphanumeric, hyphens, underscores only.
 var menuItemIDPattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
+var markdownPageSlugPattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_-]*$`)
+
+func validMarkdownPageSlug(slug string) bool {
+	return len(slug) <= 64 && markdownPageSlugPattern.MatchString(slug)
+}
 
 // generateMenuItemID generates a short random hex ID for a custom menu item.
 func generateMenuItemID() (string, error) {
@@ -1112,8 +1117,8 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 			if strings.HasPrefix(urlTrimmed, "md:") {
 				// Markdown page mode: URL = "md:<slug>"
 				slug := strings.TrimPrefix(urlTrimmed, "md:")
-				if slug == "" {
-					response.BadRequest(c, "Custom menu item markdown slug cannot be empty (use md:slug format)")
+				if !validMarkdownPageSlug(slug) {
+					response.BadRequest(c, "Custom menu item markdown slug must contain only letters, numbers, hyphens, and underscores, and start with a letter or number")
 					return
 				}
 			} else {
